@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package antimetal.resource.v1;
+
+// Provider is an entity that serves a resource
+enum Provider {
+  PROVIDER_OTHER = 0;
+  PROVIDER_AWS = 1;
+  PROVIDER_GCP = 2;
+  PROVIDER_AZURE = 3;
+  PROVIDER_KUBERNETES = 4;
+}
+
+// ProviderAccount contains provider account information
+message ProviderAccount {
+  string account_id = 1;
+  string account_name = 2;
+}

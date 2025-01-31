@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package antimetal.resource.v1;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+// Relationship is a directed edge that represents a relationship between two Resources.
+// It is defined like a triplet that contains a predicate, which defines what type of relationship
+// it is, and a subject and object for the predicate. There can be multiple associations with the
+// same predicate type attached to the same resource.
+//
+// Many relationships between Resources in the resource graph are bidirectional.
+// Bidirectional edges are modeled as two separate Relationship instances. When Relationships are
+// updated in the graph the inverse Relationships should be kept up to date.
+message Relationship {
+  // Unique identifier for the relationship.
+  bytes id = 1;
+  // Resource id that is the subject of the predicate.
+  bytes subject = 2;
+  // Resource id that is The object of the predicate.
+  bytes object = 3;
+  // The predicate that defines the relationship.
+  google.protobuf.Any predicate = 4;
+  // Creation time of the relationship.
+  google.protobuf.Timestamp creation_time = 5;
+  // Time when the relationship was last updated.
+  google.protobuf.Timestamp update_time = 6;
+  // Deletion time of the relationship.
+  google.protobuf.Timestamp deletion_time = 7;
+}

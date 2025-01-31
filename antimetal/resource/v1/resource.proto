@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package antimetal.resource.v1;
+
+import "antimetal/resource/v1/provider.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+// ResourceDescriptor describes a resource type.
+message ResourceDescriptor {
+  // The resource type kind.
+  string kind = 1;
+  // The resource type.
+  // This should match the type_url in Resource.spec Any field.
+  string type = 2;
+}
+
+// ResourceMeta is metadata that all concrete cloud resources have.
+message ResourceMeta {
+  // Resource ID
+  bytes id = 1;
+  // The provider that serves the resource.
+  Provider provider = 2;
+  // Cloud provider resource ID
+  string provider_id = 3;
+  // The provider account that owns the resource
+  ProviderAccount account = 4;
+  // Provider service the resource belongs to
+  string service = 5;
+  // Resource name
+  string name = 6;
+  // List of resource tags
+  repeated Tag tags = 7;
+  // Resource group in which resource is contained.
+  string group = 8;
+  // Region in which the resource is located.
+  string region = 9;
+  // Zone in which the resource is located.
+  string zone = 10;
+  // Creation time of the resource
+  google.protobuf.Timestamp creation_time = 11;
+  // Time when the resource was last updated
+  google.protobuf.Timestamp update_time = 12;
+  // Deletion time of the resource
+  google.protobuf.Timestamp deletion_time = 13;
+}
+
+// Tag is a key value pair that helps identify or describe a resource.
+message Tag {
+  string key = 1;
+  string value = 2;
+}
+
+// Resource is a typed node on the Infrastructure graph and represents an
+// instance of a cloud resource.
+message Resource {
+  // Contains type info for the resource.
+  ResourceDescriptor type = 1;
+  // Contains resource metadata.
+  ResourceMeta metadata = 2;
+  // The resource spec. The type of this field is determined by the type field.
+  google.protobuf.Any spec = 3;
+}
