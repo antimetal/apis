@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package resource.v1;
+
+import "resource/v1/provider.proto";
+
+
+// Namespace is a scope for a resource.
+message Namespace {
+  oneof namespace {
+    CloudNamespace cloud = 1;
+    KubernetesNamespace kube = 2;
+  }
+}
+
+// CloudNamespace specifies the namespace scope for cloud resources.
+message CloudNamespace {
+  ProviderAccount account = 1;
+  string region = 2;
+  string group = 3;
+}
+
+// KubernetesNamespace specifies the namespace scope for Kubernetes resources.
+message KubernetesNamespace {
+  string cluster = 1;
+  string namespace = 2;
+}
