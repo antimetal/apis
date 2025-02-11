@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package antimetal.kubernetes.v1;
+package kubernetes.v1;
 
 // Cluster contains information about a Kubernetes cluster.
 message Cluster {

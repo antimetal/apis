@@ -1,4 +1,8 @@
-version: v1
+version: v2
+
+modules:
+  - path: antimetal
+
 breaking:
   use:
     - FILE

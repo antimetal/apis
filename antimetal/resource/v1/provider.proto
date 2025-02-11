@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package antimetal.resource.v1;
+package resource.v1;
 
 // Provider is an entity that serves a resource
 enum Provider {
