@@ -4,7 +4,6 @@ package resource.v1;
 
 import "resource/v1/provider.proto";
 
-
 // Namespace is a scope for a resource.
 message Namespace {
   oneof namespace {
