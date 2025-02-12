@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package service.resource.v1;
+
+import "resource/v1/delta.proto";
+
+// IntakeService is used to create, update, and delete infrastructure graph
+// objects. The Service ingests Resources/Relationships from various sources.
+// Delta() allows clients to stream in changes to the infrastructure graph.
+//
+// Objects can have a TTL set, which defines the lifetime of the object.
+// It is used to clean up objects in the graph in the event of client failure
+// to ensure that the state of the graph represents to most current view of the
+// infrastructure. The TTL can be refreshed by sending a "Hearbeat" Delta
+// operation containing objects whose TTLs are to be refreshed.
+//
+// Objects also contain a delta_version that is used to keep track of the state
+// of individual objects. The version is set and maintained by the client
+// sending Deltas. When sending heartbeat Deltas, to refresh the object, the
+// client uses the delta_version of the last known change to the Object.
+service IntakeService {
+  rpc Delta(stream DeltaRequest) returns (DeltaResponse) {}
+}
+
+message DeltaRequest {
+  string client_id = 1;
+  repeated .resource.v1.Delta deltas = 2;
+}
+
+message DeltaResponse {}
