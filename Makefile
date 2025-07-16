@@ -49,9 +49,9 @@ lint.buf: $(BUF) ## Run buf lint checks.
 
 ##@ Buf
 
-.PHONY: buf.mod-update
-buf.mod-update: $(BUF) ## Update buf.mod and buf.lock file.
-	$(BUF) mod update
+.PHONY: buf.dep-update
+buf.dep-update: $(BUF) ## Update buf.mod and buf.lock file.
+	$(BUF) dep update
 
 .PHONY: buf.format
 buf.format: $(BUF) ## Format all protobuf files.
