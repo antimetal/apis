@@ -47,6 +47,15 @@ lint.buf: $(BUF) ## Run buf lint checks.
 		$(BUF) format --exit-code > /dev/null
 	@$(BUF) lint
 
+.PHONY: license-check
+license-check: ## Check that source code files have the correct license header.
+	@trap "echo 'Please run 'make gen-license-headers' and commit updates.'" ERR && \
+		$(LICENSE_CHECK)
+
+.PHONY: gen-license-headers
+gen-license-headers: ## Generate license headers for source code files.
+	@$(LICENSE_CHECK) --write
+
 ##@ Buf
 
 .PHONY: buf.dep-update
@@ -68,3 +77,5 @@ $(BUF): go.mod go.sum
 
 $(PROTOC_GEN_GOLANG_DEEPCOPY): go.mod go.sum
 	go build -o $(PROTOC_GEN_GOLANG_DEEPCOPY) istio.io/tools/cmd/protoc-gen-golang-deepcopy
+
+LICENSE_CHECK ?= tools/license_check/license_check.py
