@@ -1,7 +1,8 @@
 version: v2
 
 modules:
-  - path: antimetal
+  - name: buf.build/antimetal/apis
+    path: api
 
 breaking:
   use:
