@@ -3,7 +3,6 @@ SHELL = /usr/bin/env bash -o pipefail
 
 LOCALBIN := $(shell pwd)/bin
 BUF := $(LOCALBIN)/buf
-PROTOC_GEN_GOLANG_DEEPCOPY := $(LOCALBIN)/protoc-gen-golang-deepcopy
 
 .PHONY: all
 all: proto
@@ -19,12 +18,6 @@ all: proto
 .PHONY: help
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:*.*?##/ { printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
-
-##@ Protobuf
-
-.PHONY: proto
-proto: $(BUF) $(PROTOC_GEN_GOLANG_DEEPCOPY) ## Generate protobuf packages.
-	$(BUF) generate
 
 ##@ Lint
 
@@ -74,8 +67,5 @@ go.fmt: ## Format all golang files.
 
 $(BUF): go.mod go.sum
 	go build -o $(BUF) github.com/bufbuild/buf/cmd/buf
-
-$(PROTOC_GEN_GOLANG_DEEPCOPY): go.mod go.sum
-	go build -o $(PROTOC_GEN_GOLANG_DEEPCOPY) istio.io/tools/cmd/protoc-gen-golang-deepcopy
 
 LICENSE_CHECK ?= tools/license_check/license_check.py
