@@ -1,0 +1,27 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract buf version from go.mod
+        id: buf-version
+        run: |
+          BUF_VERSION=$(grep 'github.com/bufbuild/buf' go.mod | awk '{print $2}' | sed 's/^v//')
+          echo "version=$BUF_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Publish to Buf Registry
+        uses: bufbuild/buf-action@v1
+        with:
+          version: ${{ steps.buf-version.outputs.version }}
+          token: ${{ secrets.BUF_TOKEN }}

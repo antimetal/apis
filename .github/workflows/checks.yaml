@@ -1,0 +1,38 @@
+name: Checks
+on:
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  license-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check License
+        shell: bash
+        run: make license-check
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract buf version from go.mod
+        id: buf-version
+        run: |
+          BUF_VERSION=$(grep 'github.com/bufbuild/buf' go.mod | awk '{print $2}' | sed 's/^v//')
+          echo "version=$BUF_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Lint
+        uses: bufbuild/buf-action@v1
+        with:
+          version: ${{ steps.buf-version.outputs.version }}
+          push: false
