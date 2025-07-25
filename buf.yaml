@@ -12,3 +12,7 @@ lint:
     - STANDARD
   except:
     - ENUM_ZERO_VALUE_SUFFIX
+
+deps:
+  - buf.build/googleapis/googleapis
+

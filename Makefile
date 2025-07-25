@@ -4,9 +4,6 @@ SHELL = /usr/bin/env bash -o pipefail
 LOCALBIN := $(shell pwd)/bin
 BUF := $(LOCALBIN)/buf
 
-.PHONY: all
-all: proto
-
 # The help target prints out all targets with their descriptions.
 # The target descriptions by '##'. The awk command is responsible for reading the
 # entire set of makefiles included in this invocation, looking for lines of the
