@@ -1,0 +1,396 @@
+// Antimetal API definitions
+// Copyright Antimetal, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package antimetal.service.agent.v1;
+
+import "antimetal/agent/v1/config.proto";
+import "antimetal/agent/v1/instance.proto";
+import "antimetal/runtime/v1/linux.proto";
+import "antimetal/types/v1/types.proto";
+import "google/rpc/status.proto";
+
+// AgentManagementService provides configuration management for Antimetal Agents.
+//
+// # Protocol Overview
+//
+// The WatchConfig RPC establishes a persistent bidirectional stream between an Agent
+// and the management server. Each stream begins with a WatchConfigRequest of type
+// INITIAL from the Agent, which specifies the Agent identifier, its supported data
+// collector capabilities, and the most recent versions of config objects it has seen.
+
+// The server will then send a WatchConfigResponse containing any configuration
+// objects that have changed since the last config versions that the Agent indicated
+// it has seen as well as any new configuration objects for the Agent. Configuration
+// objects are specific config message types (e.g., HostStatsCollectionConfig)
+// wrapped directly in antimetal.types.v1.Object. The server may send additional responses
+// at any time for new or updated configs.
+//
+// Whenever the Agent receives a new response, it will send another WatchConfigRequest
+// of either ACK or NACK type indicating whether or not the individual config objects
+// in the response were valid in isolation (see ACK/NACK and config versions for details).
+//
+// All server responses will contain a sequence number. Subsequent requests from the
+// Agent must set the response_seq_num field to the most recent sequence number
+// received from the server on that stream. This allows the management server to
+// determine which response a given request is associated with, which avoids various
+// race conditions. Note that the sequence number does not survive stream restarts.
+//
+// Only the first request on a stream is guaranteed to carry the Agent instance
+// identifier. Subsequent requests on the same stream may carry an empty Agent
+// instance identifier. The Agent instance identifier should always be identical
+// if present more than once on the stream.
+//
+// # ACK/NACK and Config Version
+//
+// Each configuration object is wrapped in an antimetal.types.v1.Object and
+// has independent versioning. Config object versions are managed via the `version`
+// field in `antimetal.types.v1.Object`. The version for a particular config
+// is changed when the management server sends an updated config of the same
+// object name and type. Configuration objects are specific message types
+// (e.g., HostStatsCollectionConfig).
+//
+// Note that the version for a config is not a property of an individual stream
+// but rather a property of the configs themselves. If the stream becomes broken
+// and the Agent creates a new stream, the Agent’s initial request on the new stream
+// should indicate the most recent version seen by the Agent on the previous stream.
+// The management server may decide to optimize by not resending configs that the Agent
+// had already seen on the previous stream but only if the Agent registers itself
+// as the same instance with the same instance id as before. If the Agent starts
+// a new stream with a different instance id, then the management server can assume
+// that it is a new Agent process with separate configs.
+//
+// ## ACK
+//
+// An ACK (acknowledgment) indicates that all configuration objects in the server
+// response were valid and successfully applied by the Agent.
+//
+// The Agent sends back the sequence number of the successfully validated response
+// and SHOULD store the versions of all accepted objects for future reference.
+// Subsequent INITIAL requests should include these object versions.
+//
+// Agent                                    Management Server
+//   |                                           |
+//   |<------- config update ------------------- |
+//   |         (seq: "n", version: "2")          |
+//   |                                           |
+//   | [Agent validates config syntax: OK]       |
+//   | [Agent applies config to runtime: OK]     |
+//   |                                           |
+//   |-------- ACK request --------------------->|
+//   |         (response_seq_num: "n")           |
+//
+//
+// ## NACK
+//
+// A NACK (negative acknowledgment) indicates that at least one config object in
+// the response was invalid and was not applied. The Agent sends back the sequence
+// number of the rejected response and MUST include detailed error information in
+// `error_detail`. The management server can use the error details to send corrected
+// configuration
+//
+// Agent                                    Management Server
+//   |                                           |
+//   |<------- config update ------------------- |
+//   |         (seq: "n", version: "v2")         |
+//   |                                           |
+//   | [Agent validates config: INVALID]         |
+//   |                                           |
+//   |-------- NACK request -------------------->|
+//   |         (response_seq_num: "n")           |
+//   |         (error: "missing field X")        |
+//   |                                           |
+//   |<------- corrected config -----------------|
+//   |         (seq: "n+1", version: "v3")       |
+//   |                                           |
+//   | [Agent validates: OK, applies: OK]        |
+//   |                                           |
+//   |-------- ACK request --------------------->|
+//   |         (response_seq_num: "n+1")         |
+//
+//
+// # Collector Capability Negotiation
+//
+// Agents MUST declare their supported data collector capabilities during stream
+// initialization using the supported_collectors field in INITIAL requests. This
+// enables the management server to send only relevant configurations and avoid
+// capability mismatches that would result in NACK responses.
+//
+// ## Mandatory Capability Declaration
+//
+// The supported_collectors field is a list of antimetal.agent.v1.Collectors
+// enum values. Agents MUST include all collectors they can support:
+//
+// ```
+// WatchConfigRequest {
+//   type: INITIAL
+//   instance: { id: "agent-123", ... }
+//   supported_collectors: [
+//     COLLECTORS_SYS_CPU,
+//     COLLECTORS_CPU_INFO,
+//     COLLECTORS_SYS_MEM,
+//     COLLECTORS_MEM_INFO,
+//     COLLECTORS_SYS_NET
+//   ]
+//   initial_configs: [...]
+// }
+// ```
+//
+// ## Agent NACK for Unsupported Capabilities
+//
+// If the server sends a configuration requiring collectors not declared in
+// supported_collectors, the agent SHOULD respond with a NACK:
+//
+// Agent                                    Management Server
+//   |                                           |
+//   |-------- INITIAL request ----------------->|
+//   |         supported_collectors: [           |
+//   |           COLLECTORS_SYS_CPU,             | (CPU + MEM only)
+//   |           COLLECTORS_SYS_MEM              |
+//   |         ]                                 |
+//   |                                           |
+//   |<------- network config ------------------|
+//   |         (requires COLLECTORS_SYS_NET)     |
+//   |         seq_num: "1"                      |
+//   |                                           |
+//   |-------- NACK request -------------------->|
+//   |         response_seq_num: "1"             |
+//   |         error_detail: {                   |
+//   |           code: FAILED_PRECONDITION       |
+//   |           message: "Unsupported collector:|
+//   |                     config requires       |
+//   |                     COLLECTORS_SYS_NET"   |
+//   |         }                                 |
+//
+// # Reconnection with Version Sync
+//
+// On reconnect the Agent may tell the management server the current configs it has
+// to avoid resending them over the wire by sending the management server the config
+// names and types in initial_configs. Because no state is assumed to be preserved
+// from the previous stream, the reconnecting Agent must provide the server with all
+// config names and types that it has.
+//
+// Note that the Agent sends its initial configs also in a antimetal.types.v1.Object
+// but it only needs to supply the object name, type, and current version that it has.
+// The object data field may be left empty.
+//
+// Agent                                    Management Server
+//   |                                           |
+//   | [Stream reconnection after failure]      |
+//   |                                           |
+//   |-------- INITIAL request ----------------->|
+//   |         (instance: same-id)               |
+//   |         (last versions: "cfg-v4")         |
+//   |                                           |
+//   | [Server checks: cfg-v4 != current cfg-v6]|
+//   |                                           |
+//   |<------- incremental update --------------|
+//   |         (seq: "1", version: "cfg-v6")     |
+//   |         (only changed configs sent)       |
+//   |                                           |
+//   |-------- ACK request --------------------->|
+//   |         (response_seq_num: "1")           |
+// ```
+//
+// # Full Example
+//
+// This comprehensive example demonstrates the full protocol across multiple streams.
+//
+// ========== STREAM 1 (Agent Startup) ==========
+// Agent                                    Management Server
+//   |                                           |
+//   |-------- INITIAL request ----------------->|
+//   |         type: INITIAL                     |
+//   |         instance: {id: "agt-abc123"}      |
+//   |         supported_collectors: [           | (CPU+MEM capabilities)
+//   |           COLLECTORS_SYS_CPU,             |
+//   |           COLLECTORS_SYS_MEM              |
+//   |         ]                                 |
+//   |         initial_configs: []               | (new agent)
+//   |                                           |
+//   |<------- first config -------------------|
+//   |         configs: [{                       |
+//   |           type: {                         |
+//   |             type: "antimetal.agent.v1.HostStatsCollectionConfig"
+//   |           }                               |
+//   |           name: "cpu-stats-config",       |
+//   |           version: "v1",                  |
+//   |           data: <serialized HostStatsCollectionConfig>
+//   |         }]                                |
+//   |         seq_num: "1"                      |
+//   |                                           |
+//   |-------- ACK request --------------------->|
+//   |         type: ACK                         |
+//   |         response_seq_num: "1"             |
+//   |                                           |
+//   |<------- config update ------------------- |
+//   |         configs: [{                       |
+//   |           type: {                         |
+//   |             type: "antimetal.agent.v1.HostStatsCollectionConfig"
+//   |           }                               |
+//   |           name: "cpu-stats-config",       |
+//   |           version: "v2",                  |
+//   |           data: <updated HostStatsCollectionConfig>
+//   |         }]                                |
+//   |         seq_num: "2"                      |
+//   |                                           |
+//   |-------- NACK request -------------------->|
+//   |         type: NACK                        |
+//   |         response_seq_num: "2"             |
+//   |         error_detail: {                   |
+//   |           message: "invalid sampling rate"|
+//   |         }                                 |
+//   |                                           |
+//   |<------- corrected config ---------------- |
+//   |         configs: [{                       |
+//   |           type: {                         |
+//   |             type: "antimetal.agent.v1.HostStatsCollectionConfig"
+//   |           }                               |
+//   |           name: "cpu-stats-config",       |
+//   |           version: "v3",                  |
+//   |           data: <fixed HostStatsCollectionConfig>
+//   |         }]                                |
+//   |         seq_num: "3"                      |
+//   |                                           |
+//   |-------- ACK request --------------------->|
+//   |         type: ACK                         |
+//   |         response_seq_num: "3"             |
+//   |                                           |
+//   | [Agent persists: node-config@v3           |
+//   |                                           |
+//   |         *** NETWORK INTERRUPTION ***      |
+//   |                                           |
+//   |                                           |
+// ========== STREAM 2 (Reconnection) ==========
+//   |                                           |
+//   |-------- INITIAL request ----------------->|
+//   |         type: INITIAL                     |
+//   |         instance: {id: "agt-abc123"}      | (same agent instance)
+//   |         supported_collectors: [           | (same capabilities)
+//   |           COLLECTORS_SYS_CPU,             |
+//   |           COLLECTORS_SYS_MEM              |
+//   |         ]                                 |
+//   |         initial_configs: [{               |
+//   |           type: {                         |
+//   |             type: "antimetal.agent.v1.HostStatsCollectionConfig"
+//   |           }                               |
+//   |           name: "cpu-stats-config",       |
+//   |           version: "v3"                   | (last known version)
+//   |         }]                                |
+//   |                                           |
+//   |<------- no-op response -------------------|
+//   |         configs: []                       | (agent is up-to-date)
+//   |         seq_num: "1"                      | ◀── seq number RESETS
+//   |                                           |
+//   |-------- ACK request --------------------->|
+//   |         type: ACK                         |
+//   |         response_seq_num: "1"             |
+//   |                                           |
+//   |         [Time passes...]                  |
+//   |                                           |
+//   |<------- new config update ----------------|
+//   |         configs: [{                       |
+//   |           type: {                         |
+//   |             type: "antimetal.agent.v1.HostStatsCollectionConfig"
+//   |           }                               |
+//   |           name: "cpu-stats-config",       |
+//   |           version: "v4",                  |
+//   |           data: <updated HostStatsCollectionConfig>
+//   |         }]                                |
+//   |         seq_num: "2"                      |
+//   |                                           |
+//   |-------- ACK request --------------------->|
+//   |         type: ACK                         |
+//   |         response_seq_num: "2"             |
+//   |                                           |
+//   | [Agent persists: node-config@v4           |
+service AgentManagementService {
+  // WatchConfig establishes a bidirectional streaming connection for configuration
+  // management between an Antimetal Agent and the management server.
+  //
+  // This RPC is long-lived and should remain open for the duration of the agent's
+  // lifecycle.
+  rpc WatchConfig(stream WatchConfigRequest) returns (stream WatchConfigResponse) {}
+}
+
+// WatchConfigRequestType defines the different types of requests an agent
+// can send in the configuration watch stream.
+enum WatchConfigRequestType {
+  // INITIAL request is sent by the agent when first establishing the stream.
+  // This request MUST include the agent's instance information and supported
+  // collector capabilities. It MAY include existing configuration objects
+  // the agent currently has to enable incremental updates.
+  WATCH_CONFIG_REQUEST_TYPE_INITIAL = 0;
+
+  // ACK (acknowledgment) indicates the agent successfully received and applied
+  // the configuration from the server. The agent MUST include the sequence
+  // number of the response being acknowledged.
+  WATCH_CONFIG_REQUEST_TYPE_ACK = 1;
+
+  // NACK (negative acknowledgment) indicates the agent failed to apply the
+  // configuration from the server. The agent MUST include the sequence number
+  // and error details explaining why the configuration was rejected.
+  WATCH_CONFIG_REQUEST_TYPE_NACK = 2;
+}
+
+// WatchConfigRequest is sent by agents to the management server in the
+// configuration watch stream. The request type determines which fields
+// are required and how the server should interpret the message.
+message WatchConfigRequest {
+  // instance identifies the Antimetal Agent making the request.
+  // This field is REQUIRED for INITIAL requests and SHOULD be included
+  // in subsequent requests for server-side correlation and debugging.
+  antimetal.agent.v1.Instance instance = 1;
+
+  // type specifies the purpose of this request message.
+  // This field is REQUIRED for all request types.
+  WatchConfigRequestType type = 2;
+
+  // supported_collectors is a list of collector values indicating which data
+  // collectors this agent supports. This field is REQUIRED for INITIAL requests.
+  repeated antimetal.agent.v1.Collectors supported_collectors = 3;
+
+  // initial_configs contains configuration objects the agent currently has.
+  // This field is OPTIONAL and only used with INITIAL requests to enable
+  // incremental configuration updates. The server can compare these with
+  // the desired state and send only necessary changes. Each object wraps
+  // a specific config type.
+  repeated antimetal.types.v1.Object initial_configs = 4;
+
+  // linux_runtime provides Linux-specific runtime information from the agent.
+  // such as kernel version and cgroup configuration. The agent can send this
+  // during an INITIAL request. The server uses this information to optimize
+  // configuration delivery and ensure compatibility with the agent's runtime
+  // environment.
+  antimetal.runtime.v1.Linux linux_runtime = 5;
+
+  // response_seq_num is the sequence number of the server response being
+  // acknowledged or rejected. This field is REQUIRED for ACK and NACK
+  // request types and MUST be empty for INITIAL requests.
+  string response_seq_num = 6;
+
+  // error_detail provides information about why a configuration was rejected.
+  // This field is REQUIRED for NACK requests and MUST be empty for other
+  // request types. The error should be detailed enough for server-side
+  // debugging and corrective action.
+  google.rpc.Status error_detail = 7;
+}
+
+// WatchConfigResponse is sent by the management server to agents with
+// configuration updates and control information.
+message WatchConfigResponse {
+  // configs contains the configuration objects being delivered to the agent.
+  // Each object wraps a specific config message type (e.g., HostStatsCollectionConfig)
+  repeated antimetal.types.v1.Object configs = 1;
+
+  // seq_num is a server-assigned sequence number for this response.
+  // Sequence numbers MUST be monotonically increasing within a stream
+  // and are used by agents to acknowledge specific configuration deliveries.
+  // This field is REQUIRED for all responses containing configuration data.
+  string seq_num = 2;
+}

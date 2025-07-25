@@ -1,0 +1,70 @@
+// Antimetal API definitions
+// Copyright Antimetal, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package antimetal.runtime.v1;
+
+// Linux contains Linux-specific runtime information reported by agents.
+// This information helps the management server optimize configuration
+// delivery and ensure compatibility with the agent's runtime environment.
+message Linux {
+  // kernel_version is the Linux kernel version string (e.g., "5.4.0-42-generic").
+  // This field helps the server understand kernel capabilities and select
+  // appropriate collection methods.
+  string kernel_version = 1;
+
+  // cgroup_info provides detailed information about the cgroup subsystem
+  // configuration on the Linux system. This includes both the cgroup version
+  // (v1, v2, or hybrid) and the driver implementation (cgroupfs or systemd).
+  CgroupInfo cgroup_info = 2;
+}
+
+// CgroupInfo contains detailed information about the cgroup subsystem
+// configuration on a Linux system. This information helps the management
+// server understand how to interact with container runtimes and system
+// resource management.
+message CgroupInfo {
+  // version indicates which cgroup subsystem version is in use.
+  // This affects how system resources are organized and controlled.
+  CgroupVersion version = 1;
+
+  // driver specifies the cgroup driver implementation being used.
+  // Different drivers have different behavioral characteristics and
+  // compatibility requirements with container runtimes.
+  CgroupDriver driver = 2;
+}
+
+// CgroupVersion defines the supported cgroup subsystem versions.
+// The cgroup version affects how system resources are managed and monitored.
+enum CgroupVersion {
+  // CGROUP_VERSION_V1 indicates the legacy cgroup v1 subsystem is in use.
+  // This version uses multiple hierarchies with separate controllers.
+  CGROUP_VERSION_V1 = 0;
+
+  // CGROUP_VERSION_V2 indicates the unified cgroup v2 subsystem is in use.
+  // This version provides a single unified hierarchy for all controllers.
+  CGROUP_VERSION_V2 = 1;
+
+  // CGROUP_VERSION_HYBRID indicates a mixed deployment with both v1 and v2.
+  // Some controllers use v1 while others use the v2 unified hierarchy.
+  CGROUP_VERSION_HYBRID = 2;
+}
+
+// CgroupDriver defines the supported cgroup driver implementations.
+// The driver affects how cgroups are created, managed, and interfaced with.
+enum CgroupDriver {
+  // CGROUP_DRIVER_CGROUPFS indicates direct cgroupfs management.
+  // This driver directly manipulates cgroup filesystem entries and is
+  // typically used in simpler deployments or older systems.
+  CGROUP_DRIVER_CGROUPFS = 0;
+
+  // CGROUP_DRIVER_SYSTEMD indicates systemd-managed cgroups.
+  // This driver integrates with systemd for cgroup lifecycle management
+  // and is the preferred approach on systemd-based distributions.
+  CGROUP_DRIVER_SYSTEMD = 1;
+}
