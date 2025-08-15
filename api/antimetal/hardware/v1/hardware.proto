@@ -60,6 +60,32 @@ enum BusType {
   BUS_TYPE_VIRTIO = 9;
 }
 
+// DuplexMode represents network interface duplex modes
+enum DuplexMode {
+  DUPLEX_MODE_UNKNOWN = 0;
+  DUPLEX_MODE_HALF = 1;
+  DUPLEX_MODE_FULL = 2;
+}
+
+// OperationalState represents network interface operational states
+enum OperationalState {
+  OPERATIONAL_STATE_UNKNOWN = 0;
+  OPERATIONAL_STATE_UP = 1;
+  OPERATIONAL_STATE_DOWN = 2;
+  OPERATIONAL_STATE_TESTING = 3;
+  OPERATIONAL_STATE_DORMANT = 4;
+  OPERATIONAL_STATE_NOT_PRESENT = 5;
+  OPERATIONAL_STATE_LOWER_LAYER_DOWN = 6;
+}
+
+// ContainmentType represents types of containment relationships
+enum ContainmentType {
+  CONTAINMENT_TYPE_UNKNOWN = 0;
+  CONTAINMENT_TYPE_PHYSICAL = 1;
+  CONTAINMENT_TYPE_LOGICAL = 2;
+  CONTAINMENT_TYPE_PARTITION = 3;
+}
+
 
 // SystemNode represents the root hardware node for a physical or virtual machine
 message SystemNode {
@@ -181,8 +207,8 @@ message NetworkInterfaceNode {
   string mac_address = 2;
   // Link speed in Mbps
   uint64 speed = 3;
-  // Duplex mode (full, half)
-  string duplex = 4;
+  // Duplex mode
+  DuplexMode duplex = 4;
   // Maximum transmission unit
   uint32 mtu = 5;
   // Driver name
@@ -194,7 +220,7 @@ message NetworkInterfaceNode {
   // IPv6 addresses assigned to this interface
   repeated string ipv6_addresses = 11;
   // Operational state
-  string oper_state = 8;
+  OperationalState oper_state = 8;
   // Carrier status
   bool carrier = 9;
 }
@@ -203,8 +229,8 @@ message NetworkInterfaceNode {
 
 // Contains represents hierarchical containment relationship
 message Contains {
-  // Type of containment (physical, logical, partition)
-  string type = 1;
+  // Type of containment
+  ContainmentType type = 1;
 }
 
 // NUMAAffinity represents NUMA node affinity
