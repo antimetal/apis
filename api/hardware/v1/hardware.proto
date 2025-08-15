@@ -1,0 +1,177 @@
+// Copyright Antimetal, Inc. All rights reserved.
+//
+// Use of this source code is governed by a source available license that can be found in the
+// LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package hardware.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "hardware/v1;hardwarev1";
+
+// SystemNode represents the root hardware node for a physical or virtual machine
+message SystemNode {
+  // Hostname of the system
+  string hostname = 1;
+  // Architecture (e.g., x86_64, arm64)
+  string architecture = 2;
+  // Boot time of the system
+  google.protobuf.Timestamp boot_time = 3;
+  // Kernel version
+  string kernel_version = 4;
+  // Operating system information
+  string os_info = 5;
+}
+
+// CPUPackageNode represents a physical CPU socket/package
+message CPUPackageNode {
+  // Socket ID (physical package ID)
+  int32 socket_id = 1;
+  // Vendor ID (e.g., GenuineIntel, AuthenticAMD)
+  string vendor_id = 2;
+  // Model name (e.g., Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz)
+  string model_name = 3;
+  // CPU family
+  int32 cpu_family = 4;
+  // Model number
+  int32 model = 5;
+  // Stepping
+  int32 stepping = 6;
+  // Microcode version
+  string microcode = 7;
+  // Cache size
+  string cache_size = 8;
+  // Number of physical cores in this package
+  int32 physical_cores = 9;
+  // Number of logical cores (with hyperthreading)
+  int32 logical_cores = 10;
+}
+
+// CPUCoreNode represents an individual CPU core
+message CPUCoreNode {
+  // Processor ID (logical CPU number)
+  int32 processor_id = 1;
+  // Physical core ID
+  int32 core_id = 2;
+  // Physical package ID this core belongs to
+  int32 physical_id = 3;
+  // Current frequency in MHz
+  double frequency_mhz = 4;
+  // Number of sibling threads
+  int32 siblings = 5;
+}
+
+// NUMANode represents a NUMA memory node
+message NUMANode {
+  // NUMA node ID
+  int32 node_id = 1;
+  // Total memory in bytes for this NUMA node
+  uint64 total_bytes = 2;
+  // CPUs assigned to this NUMA node
+  repeated int32 cpus = 3;
+  // Distance to other NUMA nodes
+  repeated int32 distances = 4;
+}
+
+// MemoryModuleNode represents system memory configuration
+message MemoryModuleNode {
+  // Total system memory in bytes
+  uint64 total_bytes = 1;
+  // Whether NUMA is enabled
+  bool numa_enabled = 2;
+  // Whether NUMA balancing is available
+  bool numa_balancing_available = 3;
+  // Number of NUMA nodes
+  int32 numa_node_count = 4;
+}
+
+// DiskDeviceNode represents a physical storage device
+message DiskDeviceNode {
+  // Device name (e.g., sda, nvme0n1)
+  string device = 1;
+  // Model name
+  string model = 2;
+  // Vendor/manufacturer
+  string vendor = 3;
+  // Size in bytes
+  uint64 size_bytes = 4;
+  // Whether it's a rotational disk (HDD) or not (SSD)
+  bool rotational = 5;
+  // Logical block size
+  uint32 block_size = 6;
+  // Physical block size
+  uint32 physical_block_size = 7;
+  // I/O scheduler
+  string scheduler = 8;
+  // Queue depth
+  uint32 queue_depth = 9;
+}
+
+// DiskPartitionNode represents a disk partition
+message DiskPartitionNode {
+  // Partition name (e.g., sda1, nvme0n1p1)
+  string name = 1;
+  // Parent device name
+  string parent_device = 2;
+  // Size in bytes
+  uint64 size_bytes = 3;
+  // Starting sector
+  uint64 start_sector = 4;
+}
+
+// NetworkInterfaceNode represents a network adapter
+message NetworkInterfaceNode {
+  // Interface name (e.g., eth0, wlan0)
+  string interface = 1;
+  // MAC address
+  string mac_address = 2;
+  // Link speed in Mbps
+  uint64 speed = 3;
+  // Duplex mode (full, half)
+  string duplex = 4;
+  // Maximum transmission unit
+  uint32 mtu = 5;
+  // Driver name
+  string driver = 6;
+  // Interface type (ethernet, wireless, loopback, virtual, etc.)
+  string type = 7;
+  // Operational state
+  string oper_state = 8;
+  // Carrier status
+  bool carrier = 9;
+}
+
+// Hardware relationship predicate types
+
+// ContainsPredicate represents hierarchical containment relationship
+message ContainsPredicate {
+  // Type of containment (physical, logical, partition)
+  string type = 1;
+}
+
+// NUMAAffinityPredicate represents NUMA node affinity
+message NUMAAffinityPredicate {
+  // NUMA node ID
+  int32 node_id = 1;
+  // Distance metric (for NUMA distance relationships)
+  int32 distance = 2;
+}
+
+// SocketSharingPredicate represents CPU cores sharing a physical socket
+message SocketSharingPredicate {
+  // Physical package ID
+  int32 physical_id = 1;
+  // Socket ID
+  int32 socket_id = 2;
+}
+
+// BusConnectionPredicate represents hardware bus connections
+message BusConnectionPredicate {
+  // Bus type (pci, usb, sata, nvme)
+  string bus_type = 1;
+  // Optional bus address
+  string bus_address = 2;
+}
