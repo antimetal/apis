@@ -16,7 +16,7 @@ enum Provider {
   PROVIDER_GCP = 2;
   PROVIDER_AZURE = 3;
   PROVIDER_KUBERNETES = 4;
-  PROVIDER_HARDWARE = 5;
+  PROVIDER_ANTIMETAL = 5;
 }
 
 // ProviderAccount contains provider account information

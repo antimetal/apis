@@ -5,26 +5,68 @@
 // the LICENSE file or at:
 // https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
 
-// Copyright Antimetal, Inc. All rights reserved.
-//
-// Use of this source code is governed by a source available license that can be found in the
-// LICENSE file or at:
-// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
-
 syntax = "proto3";
 
-package hardware.v1;
+package antimetal.hardware.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "hardware/v1;hardwarev1";
+// Architecture represents system architectures following uname conventions
+enum Architecture {
+  ARCHITECTURE_UNKNOWN = 0;
+  ARCHITECTURE_X86 = 1;
+  ARCHITECTURE_X86_64 = 2;
+  ARCHITECTURE_ARM = 3;
+  ARCHITECTURE_ARM64 = 4;
+  ARCHITECTURE_PPC = 5;
+  ARCHITECTURE_PPC64 = 6;
+  ARCHITECTURE_PPC64LE = 7;
+  ARCHITECTURE_S390 = 8;
+  ARCHITECTURE_S390X = 9;
+  ARCHITECTURE_MIPS = 10;
+  ARCHITECTURE_MIPS64 = 11;
+  ARCHITECTURE_MIPS64LE = 12;
+  ARCHITECTURE_RISCV64 = 13;
+  ARCHITECTURE_SPARC = 14;
+  ARCHITECTURE_SPARC64 = 15;
+}
+
+// InterfaceType represents network interface types
+enum InterfaceType {
+  INTERFACE_TYPE_UNKNOWN = 0;
+  INTERFACE_TYPE_ETHERNET = 1;
+  INTERFACE_TYPE_WIRELESS = 2;
+  INTERFACE_TYPE_LOOPBACK = 3;
+  INTERFACE_TYPE_VIRTUAL = 4;
+  INTERFACE_TYPE_BRIDGE = 5;
+  INTERFACE_TYPE_VLAN = 6;
+  INTERFACE_TYPE_TUN = 7;
+  INTERFACE_TYPE_TAP = 8;
+  INTERFACE_TYPE_BOND = 9;
+  INTERFACE_TYPE_INFINIBAND = 10;
+}
+
+// BusType represents hardware bus types
+enum BusType {
+  BUS_TYPE_UNKNOWN = 0;
+  BUS_TYPE_PCI = 1;
+  BUS_TYPE_PCIE = 2;
+  BUS_TYPE_USB = 3;
+  BUS_TYPE_SATA = 4;
+  BUS_TYPE_NVME = 5;
+  BUS_TYPE_SAS = 6;
+  BUS_TYPE_IDE = 7;
+  BUS_TYPE_SCSI = 8;
+  BUS_TYPE_VIRTIO = 9;
+}
+
 
 // SystemNode represents the root hardware node for a physical or virtual machine
 message SystemNode {
   // Hostname of the system
   string hostname = 1;
-  // Architecture (e.g., x86_64, arm64)
-  string architecture = 2;
+  // Architecture following uname conventions
+  Architecture architecture = 2;
   // Boot time of the system
   google.protobuf.Timestamp boot_time = 3;
   // Kernel version
@@ -129,7 +171,9 @@ message DiskPartitionNode {
   uint64 start_sector = 4;
 }
 
-// NetworkInterfaceNode represents a network adapter
+// NetworkInterfaceNode represents a network interface (both physical NICs and virtual interfaces)
+// For physical network cards, the interface field will contain the physical device name
+// Virtual interfaces (VLANs, bridges, etc.) can be related to physical NICs via relationships
 message NetworkInterfaceNode {
   // Interface name (e.g., eth0, wlan0)
   string interface = 1;
@@ -143,8 +187,12 @@ message NetworkInterfaceNode {
   uint32 mtu = 5;
   // Driver name
   string driver = 6;
-  // Interface type (ethernet, wireless, loopback, virtual, etc.)
-  string type = 7;
+  // Interface type
+  InterfaceType type = 7;
+  // IPv4 addresses assigned to this interface
+  repeated string ipv4_addresses = 10;
+  // IPv6 addresses assigned to this interface
+  repeated string ipv6_addresses = 11;
   // Operational state
   string oper_state = 8;
   // Carrier status
@@ -153,32 +201,32 @@ message NetworkInterfaceNode {
 
 // Hardware relationship predicate types
 
-// ContainsPredicate represents hierarchical containment relationship
-message ContainsPredicate {
+// Contains represents hierarchical containment relationship
+message Contains {
   // Type of containment (physical, logical, partition)
   string type = 1;
 }
 
-// NUMAAffinityPredicate represents NUMA node affinity
-message NUMAAffinityPredicate {
+// NUMAAffinity represents NUMA node affinity
+message NUMAAffinity {
   // NUMA node ID
   int32 node_id = 1;
   // Distance metric (for NUMA distance relationships)
   int32 distance = 2;
 }
 
-// SocketSharingPredicate represents CPU cores sharing a physical socket
-message SocketSharingPredicate {
+// SocketSharing represents CPU cores sharing a physical socket
+message SocketSharing {
   // Physical package ID
   int32 physical_id = 1;
   // Socket ID
   int32 socket_id = 2;
 }
 
-// BusConnectionPredicate represents hardware bus connections
-message BusConnectionPredicate {
-  // Bus type (pci, usb, sata, nvme)
-  string bus_type = 1;
+// BusConnection represents hardware bus connections
+message BusConnection {
+  // Bus type
+  BusType bus_type = 1;
   // Optional bus address
   string bus_address = 2;
 }
