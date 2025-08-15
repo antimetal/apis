@@ -228,7 +228,15 @@ message NetworkInterfaceNode {
 // Hardware relationship predicate types
 
 // Contains represents hierarchical containment relationship
+// Inverse of ContainedBy.
 message Contains {
+  // Type of containment
+  ContainmentType type = 1;
+}
+
+// ContainedBy represents being contained within another component
+// Inverse of Contains.
+message ContainedBy {
   // Type of containment
   ContainmentType type = 1;
 }
@@ -250,7 +258,17 @@ message SocketSharing {
 }
 
 // BusConnection represents hardware bus connections
+// Inverse of ConnectedTo.
 message BusConnection {
+  // Bus type
+  BusType bus_type = 1;
+  // Optional bus address
+  string bus_address = 2;
+}
+
+// ConnectedTo represents being connected to a bus
+// Inverse of BusConnection.
+message ConnectedTo {
   // Bus type
   BusType bus_type = 1;
   // Optional bus address
