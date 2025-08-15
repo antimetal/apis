@@ -86,7 +86,6 @@ enum ContainmentType {
   CONTAINMENT_TYPE_PARTITION = 3;
 }
 
-
 // SystemNode represents the root hardware node for a physical or virtual machine
 message SystemNode {
   // Hostname of the system
