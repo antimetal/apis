@@ -9,6 +9,19 @@ syntax = "proto3";
 
 package antimetal.agent.v1;
 
+import "antimetal/types/v1/object.proto";
+
+// ConfigError represents an error that occurred during configuration processing.
+// This error type is used to indicate problems with configuration objects
+// such as validation failures, missing required fields, or invalid values.
+message ConfigError {
+  // config_ref is a reference to the configuration object that caused the error.
+  antimetal.types.v1.ObjectRef config_ref = 1;
+
+  // reason provides a human-readable explanation of what went wrong with the configuration.
+  string reason = 2;
+}
+
 // HostStatsCollectionConfig configures collection of host system statistics.
 // This configuration specifies which system collector to enable and its
 // collection parameters.
