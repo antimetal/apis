@@ -12,6 +12,11 @@ package antimetal.types.v1;
 import "antimetal/types/v1/types.proto";
 import "google/protobuf/duration.proto";
 
+message ObjectRef {
+  TypeDescriptor type = 1;
+  string name = 2;
+}
+
 // Object is an instance of a type specified in TypeDescriptor
 message Object {
   // type of the object
