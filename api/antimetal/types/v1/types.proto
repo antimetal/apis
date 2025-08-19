@@ -9,8 +9,6 @@ syntax = "proto3";
 
 package antimetal.types.v1;
 
-import "google/protobuf/duration.proto";
-
 // TypeDescriptor describes an object type.
 message TypeDescriptor {
   // kind type full url (e.g. resource.v1.Resource, resource.v1.Relationship, etc.).
@@ -18,35 +16,4 @@ message TypeDescriptor {
   string kind = 1;
   // type should be the full url
   string type = 2;
-}
-
-// Object is an instance of a type specified in TypeDescriptor
-message Object {
-  // type of the object
-  TypeDescriptor type = 1;
-  // name of the object
-  string name = 2;
-  // data SHOULD be the protobuf serialized object data
-  bytes data = 3;
-  // ttl is the Time-to-live value for the object. For each object, a timer is started.
-  // The timer is reset each time the object of the same type and name is received
-  // with a new TTL. If the object is received with no TTL set, the timer is removed for
-  // the object. Upon expiration of the timer, the object is considered expired
-  // and may be garbage collected.
-  //
-  // The TTL can be refreshed or changed by sending an Object with the same name, type,
-  // and version. In this case the data field does not need to be populated, which allows
-  // for light-weight "heartbeat" updates to keep an object with a TTL alive.
-
-  //
-  // The TTL feature is meant to support cleaning up objects in the event of
-  // a systems-agent removal/failure. For example, if the Kubernetes cluster
-  // where the systems agent is deployed in is spun down, then all the resources
-  // from the cluster will be deleted from the graph once the TTL expires.
-  google.protobuf.Duration ttl = 4;
-  // version of the object. It is used to keep track of the state of individual objects.
-  //
-  // NOTE: the version string should only be used for comparisions!
-  // It is not guaranteed that the version string is monotonically increasing.
-  string version = 5;
 }

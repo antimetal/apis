@@ -12,7 +12,7 @@ package antimetal.service.agent.v1;
 import "antimetal/agent/v1/config.proto";
 import "antimetal/agent/v1/instance.proto";
 import "antimetal/runtime/v1/linux.proto";
-import "antimetal/types/v1/types.proto";
+import "antimetal/types/v1/object.proto";
 import "google/rpc/status.proto";
 
 // AgentManagementService provides configuration management for Antimetal Agents.
