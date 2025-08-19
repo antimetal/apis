@@ -9,7 +9,6 @@ syntax = "proto3";
 
 package antimetal.service.agent.v1;
 
-import "antimetal/agent/v1/config.proto";
 import "antimetal/agent/v1/instance.proto";
 import "antimetal/runtime/v1/linux.proto";
 import "antimetal/types/v1/object.proto";
@@ -92,7 +91,11 @@ import "google/rpc/status.proto";
 // the response was invalid and was not applied. The Agent sends back the sequence
 // number of the rejected response and MUST include detailed error information in
 // `error_detail`. The management server can use the error details to send corrected
-// configuration
+// configuration.
+//
+// For configuration-specific errors, agents should include ConfigError details
+// in the error_detail to provide structured information about which configuration
+// object failed and why.
 //
 // Agent                                    Management Server
 //   |                                           |
@@ -123,19 +126,19 @@ import "google/rpc/status.proto";
 //
 // ## Mandatory Capability Declaration
 //
-// The supported_collectors field is a list of antimetal.agent.v1.Collectors
-// enum values. Agents MUST include all collectors they can support:
+// The supported_collectors field is a list of collector identifier strings.
+// Agents MUST include all collectors they can support:
 //
 // ```
 // WatchConfigRequest {
 //   type: INITIAL
 //   instance: { id: "agent-123", ... }
 //   supported_collectors: [
-//     COLLECTORS_SYS_CPU,
-//     COLLECTORS_CPU_INFO,
-//     COLLECTORS_SYS_MEM,
-//     COLLECTORS_MEM_INFO,
-//     COLLECTORS_SYS_NET
+//     "sys.cpu",
+//     "cpu.info",
+//     "sys.mem",
+//     "mem.info",
+//     "sys.net"
 //   ]
 //   initial_configs: [...]
 // }
@@ -150,12 +153,12 @@ import "google/rpc/status.proto";
 //   |                                           |
 //   |-------- INITIAL request ----------------->|
 //   |         supported_collectors: [           |
-//   |           COLLECTORS_SYS_CPU,             | (CPU + MEM only)
-//   |           COLLECTORS_SYS_MEM              |
+//   |           "sys.cpu",                      | (CPU + MEM only)
+//   |           "sys.mem"                       |
 //   |         ]                                 |
 //   |                                           |
 //   |<------- network config ------------------|
-//   |         (requires COLLECTORS_SYS_NET)     |
+//   |         (requires "sys.net")              |
 //   |         seq_num: "1"                      |
 //   |                                           |
 //   |-------- NACK request -------------------->|
@@ -164,7 +167,7 @@ import "google/rpc/status.proto";
 //   |           code: FAILED_PRECONDITION       |
 //   |           message: "Unsupported collector:|
 //   |                     config requires       |
-//   |                     COLLECTORS_SYS_NET"   |
+//   |                     sys.net"              |
 //   |         }                                 |
 //
 // # Reconnection with Version Sync
@@ -208,8 +211,8 @@ import "google/rpc/status.proto";
 //   |         type: INITIAL                     |
 //   |         instance: {id: "agt-abc123"}      |
 //   |         supported_collectors: [           | (CPU+MEM capabilities)
-//   |           COLLECTORS_SYS_CPU,             |
-//   |           COLLECTORS_SYS_MEM              |
+//   |           "sys.cpu",                      |
+//   |           "sys.mem"                       |
 //   |         ]                                 |
 //   |         initial_configs: []               | (new agent)
 //   |                                           |
@@ -272,8 +275,8 @@ import "google/rpc/status.proto";
 //   |         type: INITIAL                     |
 //   |         instance: {id: "agt-abc123"}      | (same agent instance)
 //   |         supported_collectors: [           | (same capabilities)
-//   |           COLLECTORS_SYS_CPU,             |
-//   |           COLLECTORS_SYS_MEM              |
+//   |           "sys.cpu",                      |
+//   |           "sys.mem"                       |
 //   |         ]                                 |
 //   |         initial_configs: [{               |
 //   |           type: {                         |
@@ -353,7 +356,7 @@ message WatchConfigRequest {
 
   // supported_collectors is a list of collector values indicating which data
   // collectors this agent supports. This field is REQUIRED for INITIAL requests.
-  repeated antimetal.agent.v1.Collectors supported_collectors = 3;
+  repeated string supported_collectors = 3;
 
   // initial_configs contains configuration objects the agent currently has.
   // This field is OPTIONAL and only used with INITIAL requests to enable

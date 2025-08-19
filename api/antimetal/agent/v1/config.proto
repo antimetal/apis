@@ -9,95 +9,12 @@ syntax = "proto3";
 
 package antimetal.agent.v1;
 
-// Collectors defines the data collection capabilities that an Antimetal Agent
-// can support. Each collector represents a specific type of system data
-// collection functionality.
-//
-// Agents use these values to declare their supported collectors and to
-// specify which collector to configure. The server uses this information
-// to send only relevant configurations and avoid sending configs for
-// unsupported collectors.
-enum Collectors {
-  COLLECTORS_UNSPECIFIED = 0;
-
-  // SYS_CPU enables collection of system CPU metrics.
-  // Typically collected from /proc/stat on Linux systems.
-  COLLECTORS_SYS_CPU = 1;
-
-  // CPU_INFO enables collection of CPU hardware information including
-  // processor model, architecture, cache sizes, and feature flags.
-  // Typically collected from /proc/cpuinfo on Linux systems.
-  COLLECTORS_CPU_INFO = 2;
-
-  // SYS_MEM enables collection of system memory utilization metrics
-  // including total, available, used, and cached memory statistics.
-  // Typically collected from /proc/meminfo on Linux systems.
-  COLLECTORS_SYS_MEM = 3;
-
-  // MEM_INFO enables collection of detailed memory configuration information
-  // including DIMM details, memory topology, and hardware specifications.
-  COLLECTORS_MEM_INFO = 4;
-
-  // SYS_DISK enables collection of disk I/O statistics and utilization
-  // including read/write operations, bytes transferred, and queue metrics.
-  // Typically collected from /proc/diskstats on Linux systems.
-  COLLECTORS_SYS_DISK = 5;
-
-  // DISK_INFO enables collection of storage device information including
-  // device model, capacity, filesystem details, and mount point information.
-  // May require access to block device information and mount tables.
-  COLLECTORS_DISK_INFO = 6;
-
-  // KERNEL_MSG enables collection of kernel log messages and system events.
-  // Typically requires access to kernel ring buffer (/dev/kmsg).
-  COLLECTORS_KERNEL_MSG = 7;
-
-  // SYS_LOAD enables collection of system load average metrics including
-  // 1-minute, 5-minute, and 15-minute load averages and process counts.
-  // Typically collected from /proc/loadavg on Linux systems.
-  COLLECTORS_SYS_LOAD = 8;
-
-  // SYS_NET enables collection of system network I/O statistics including
-  // bytes/packets transmitted and received per network interface.
-  // Typically collected from /proc/net/dev on Linux systems.
-  COLLECTORS_SYS_NET = 9;
-
-  // NETWORK_INFO enables collection of network interface configuration
-  // including IP addresses, MAC addresses, MTU, and interface status.
-  COLLECTORS_NETWORK_INFO = 10;
-
-  // SYS_NUMA enables collection of NUMA (Non-Uniform Memory Access) topology
-  // and memory allocation statistics across NUMA nodes.
-  // Typically collected from /proc/buddyinfo and /sys/devices/system/node.
-  COLLECTORS_SYS_NUMA = 11;
-
-  // SYS_PROC enables collection of per-process statistics.
-  // Typically collected from /proc/[pid]/ directories on Linux systems.
-  COLLECTORS_SYS_PROC = 12;
-
-  // SYS_TCP enables collection of TCP connection statistics including
-  // connection states, socket statistics, and network protocol metrics.
-  // Typically collected from /proc/net/tcp and related files.
-  COLLECTORS_SYS_TCP = 13;
-}
-
 // HostStatsCollectionConfig configures collection of host system statistics.
 // This configuration specifies which system collector to enable and its
 // collection parameters.
 message HostStatsCollectionConfig {
   // collector specifies which system statistics collector to configure.
-  //
-  // Supported collectors:
-  //   - COLLECTORS_SYS_CPU
-  //   - COLLECTORS_SYS_MEM
-  //   - COLLECTORS_SYS_DISK
-  //   - COLLECTORS_KERNEL_MSG
-  //   - COLLECTORS_SYS_LOAD
-  //   - COLLECTORS_SYS_NET
-  //   - COLLECTORS_SYS_NUMA
-  //   - COLLECTORS_SYS_PROC
-  //   - COLLECTORS_SYS_TCP
-  Collectors collector = 1;
+  string collector = 1;
 
   // interval specifies the collection interval in seconds if applicable
   uint32 interval_seconds = 2;
