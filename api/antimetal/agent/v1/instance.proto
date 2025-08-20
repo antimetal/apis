@@ -9,6 +9,8 @@ syntax = "proto3";
 
 package antimetal.agent.v1;
 
+import "antimetal/runtime/v1/linux.proto";
+
 // SemanticVersion deconstructions the major, minor, and patch versions
 // according to SemVer (https://semver.org)
 message SemanticVersion {
@@ -38,6 +40,15 @@ message Instance {
   //
   // The id SHOULD remain unchanged for the lifetime of the Agent process.
   bytes id = 1;
+
   // build used for the running Antimetal Agent process.
   Build build = 2;
+
+  // linux_runtime contains Linux-specific runtime information including
+  // system resources, kernel version, installed packages, and OS details.
+  antimetal.runtime.v1.Linux linux_runtime = 3;
+
+  // supported_collectors lists the data collection modules that this
+  // agent instance supports. E.g. "sys.cpu", "sys.mem", etc.
+  repeated string supported_collectors = 4;
 }

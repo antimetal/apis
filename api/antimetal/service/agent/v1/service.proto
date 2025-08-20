@@ -10,7 +10,6 @@ syntax = "proto3";
 package antimetal.service.agent.v1;
 
 import "antimetal/agent/v1/instance.proto";
-import "antimetal/runtime/v1/linux.proto";
 import "antimetal/types/v1/object.proto";
 import "google/rpc/status.proto";
 
@@ -354,34 +353,23 @@ message WatchConfigRequest {
   // This field is REQUIRED for all request types.
   WatchConfigRequestType type = 2;
 
-  // supported_collectors is a list of collector values indicating which data
-  // collectors this agent supports. This field is REQUIRED for INITIAL requests.
-  repeated string supported_collectors = 3;
-
   // initial_configs contains configuration objects the agent currently has.
   // This field is OPTIONAL and only used with INITIAL requests to enable
   // incremental configuration updates. The server can compare these with
   // the desired state and send only necessary changes. Each object wraps
   // a specific config type.
-  repeated antimetal.types.v1.Object initial_configs = 4;
-
-  // linux_runtime provides Linux-specific runtime information from the agent.
-  // such as kernel version and cgroup configuration. The agent can send this
-  // during an INITIAL request. The server uses this information to optimize
-  // configuration delivery and ensure compatibility with the agent's runtime
-  // environment.
-  antimetal.runtime.v1.Linux linux_runtime = 5;
+  repeated antimetal.types.v1.Object initial_configs = 3;
 
   // response_seq_num is the sequence number of the server response being
   // acknowledged or rejected. This field is REQUIRED for ACK and NACK
   // request types and MUST be empty for INITIAL requests.
-  string response_seq_num = 6;
+  string response_seq_num = 4;
 
   // error_detail provides information about why a configuration was rejected.
   // This field is REQUIRED for NACK requests and MUST be empty for other
   // request types. The error should be detailed enough for server-side
   // debugging and corrective action.
-  google.rpc.Status error_detail = 7;
+  google.rpc.Status error_detail = 5;
 }
 
 // WatchConfigResponse is sent by the management server to agents with
