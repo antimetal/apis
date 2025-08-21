@@ -9,6 +9,8 @@ syntax = "proto3";
 
 package antimetal.runtime.v1;
 
+import "google/protobuf/timestamp.proto";
+
 // Linux contains Linux-specific runtime information reported by agents.
 // This information helps the management server optimize configuration
 // delivery and ensure compatibility with the agent's runtime environment.
@@ -67,4 +69,108 @@ enum CgroupDriver {
   // This driver integrates with systemd for cgroup lifecycle management
   // and is the preferred approach on systemd-based distributions.
   CGROUP_DRIVER_SYSTEMD = 1;
+}
+
+// ContainerRuntime defines the supported container runtime implementations.
+enum ContainerRuntime {
+  CONTAINER_RUNTIME_UNKNOWN = 0;
+  CONTAINER_RUNTIME_DOCKER = 1;
+  CONTAINER_RUNTIME_CONTAINERD = 2;
+  CONTAINER_RUNTIME_CRI_CONTAINERD = 3;
+  CONTAINER_RUNTIME_CRI_O = 4;
+  CONTAINER_RUNTIME_PODMAN = 5;
+}
+
+// ProcessState defines the possible states of a Linux process.
+enum ProcessState {
+  PROCESS_STATE_UNKNOWN = 0;
+  PROCESS_STATE_RUNNING = 1;
+  PROCESS_STATE_SLEEPING = 2;
+  PROCESS_STATE_DISK_SLEEP = 3;
+  PROCESS_STATE_ZOMBIE = 4;
+  PROCESS_STATE_STOPPED = 5;
+  PROCESS_STATE_TRACING_STOP = 6;
+  PROCESS_STATE_PAGING = 7;
+  PROCESS_STATE_DEAD = 8;
+  PROCESS_STATE_WAKEKILL = 9;
+  PROCESS_STATE_WAKING = 10;
+  PROCESS_STATE_PARKED = 11;
+}
+
+// ContainerNode represents a discovered container in the runtime topology.
+// Container nodes connect to hardware resources and contain process nodes.
+message ContainerNode {
+  // container_id is the unique identifier for the container (may be truncated for some runtimes).
+  string container_id = 1;
+  
+  // runtime identifies the container runtime that manages this container.
+  ContainerRuntime runtime = 2;
+  
+  // cgroup_version indicates whether this container uses cgroup v1 or v2.
+  // Different runtimes on the same host may use different cgroup versions.
+  CgroupVersion cgroup_version = 3;
+  
+  // cgroup_path is the filesystem path to the container's cgroup directory.
+  string cgroup_path = 4;
+  
+  // image_name is the container image name (e.g., "nginx", "alpine").
+  string image_name = 5;
+  
+  // image_tag is the container image tag (e.g., "latest", "1.21").
+  string image_tag = 6;
+  
+  // labels contains runtime-specific labels and annotations.
+  map<string, string> labels = 7;
+  
+  // created_at is when the container was created.
+  google.protobuf.Timestamp created_at = 8;
+  
+  // started_at is when the container was started (may differ from created_at).
+  google.protobuf.Timestamp started_at = 9;
+  
+  // cpu_shares represents the relative CPU weight (cgroup v1 cpu.shares).
+  optional int32 cpu_shares = 10;
+  
+  // cpu_quota_us represents the CPU quota in microseconds per period.
+  optional int32 cpu_quota_us = 11;
+  
+  // cpu_period_us represents the CPU quota enforcement period in microseconds.
+  optional int32 cpu_period_us = 12;
+  
+  // memory_limit_bytes represents the memory limit in bytes (if set).
+  optional uint64 memory_limit_bytes = 13;
+  
+  // cpuset_cpus contains the CPU cores this container is allowed to use.
+  string cpuset_cpus = 14;
+  
+  // cpuset_mems contains the NUMA memory nodes this container is allowed to use.
+  string cpuset_mems = 15;
+}
+
+// ProcessNode represents a running process in the runtime topology.
+// Process nodes connect to containers via relationships and hardware resources.
+message ProcessNode {
+  // pid is the process identifier.
+  int32 pid = 1;
+  
+  // ppid is the parent process identifier.
+  int32 ppid = 2;
+  
+  // pgid is the process group identifier.
+  int32 pgid = 3;
+  
+  // sid is the session identifier.
+  int32 sid = 4;
+  
+  // command is the process command name.
+  string command = 5;
+  
+  // cmdline is the full command line with arguments.
+  string cmdline = 6;
+  
+  // state is the current process state.
+  ProcessState state = 7;
+  
+  // start_time is when the process was started.
+  google.protobuf.Timestamp start_time = 8;
 }
