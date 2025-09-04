@@ -194,5 +194,5 @@ message ContainedBy {
 // ContainmentType represents types of containment relationships
 enum ContainmentType {
   CONTAINMENT_TYPE_UNKNOWN = 0;
-  CONTAINMENT_TYPE_RUNTIME = 1;      // Runtime containment (e.g., container contains process)
+  CONTAINMENT_TYPE_RUNTIME = 1; // Runtime containment (e.g., container contains process)
 }
