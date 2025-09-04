@@ -174,3 +174,25 @@ message ProcessNode {
   // start_time is when the process was started.
   google.protobuf.Timestamp start_time = 8;
 }
+
+// Runtime relationship predicate types
+
+// Contains represents hierarchical containment relationship
+// Inverse of ContainedBy.
+message Contains {
+  // Type of containment
+  ContainmentType type = 1;
+}
+
+// ContainedBy represents being contained within another component
+// Inverse of Contains.
+message ContainedBy {
+  // Type of containment
+  ContainmentType type = 1;
+}
+
+// ContainmentType represents types of containment relationships
+enum ContainmentType {
+  CONTAINMENT_TYPE_UNKNOWN = 0;
+  CONTAINMENT_TYPE_RUNTIME = 1;      // Runtime containment (e.g., container contains process)
+}
