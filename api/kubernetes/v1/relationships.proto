@@ -39,3 +39,11 @@ message BoundBy {}
 // Used to identify the persistent volume that a persistent volume claim is bound to.
 // Inverse of BoundBy.
 message ClaimsFrom {}
+
+// Used to identify a machine, either physical or a VM, that is registered as a
+// Node.
+message RegisteredAs {}
+
+// Points to the resource that underlyings a Kubernetes Resources (e.g. underlying machine
+// for a K8s node).
+message Underlying {}
