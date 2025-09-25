@@ -16,6 +16,7 @@ message Namespace {
   oneof namespace {
     CloudNamespace cloud = 1;
     KubernetesNamespace kube = 2;
+    HostNamespace host = 3;
   }
 }
 
@@ -30,4 +31,10 @@ message CloudNamespace {
 message KubernetesNamespace {
   string cluster = 1;
   string namespace = 2;
+}
+
+// HostNamespace specifies the namespace scope for a resource located on a host machine.
+message HostNamespace {
+  string host = 1;
+  string container = 2;
 }
