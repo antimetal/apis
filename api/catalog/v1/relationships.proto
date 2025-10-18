@@ -1,0 +1,56 @@
+// Antimetal API definitions
+// Copyright Antimetal, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package catalog.v1;
+
+// Contains represents hierarchical containment.
+// Valid paths: Domain->System, System->Component, System->Resource, Component->Resource
+//              Resource->Component, Resource->System, Resource->Domain
+message Contains {}
+
+// ContainedBy represents hierarchical ownership.
+// Inverse of Contains
+message ContainedBy {}
+
+// Exposes represents API exposure.
+// Valid paths: System->API
+message Exposes {}
+
+// ExposedBy represents which systems exposes the API.
+// Inverse of Exposes
+// Valid paths: API -> System
+message ExposedBy {}
+
+// ImplementedBy represents API implementation.
+// Inverse of Exposes
+// Valid path: API->Component
+message ImplementedBy {}
+
+// Implements represents a component implementing an API
+// Inverse of ImplementedBy
+// Valid path: Component -> API
+message Implements {}
+
+// Consumes represents API or service consumption.
+// Valid paths: Component->API, Component->Component
+message Consumes {}
+
+// ConsumedBy represents which APIs or Services are consuming it
+// Inverse of Consumes
+message ConsumedBy {}
+
+// Underlying represents infrastructure attachment.
+// Valid paths: Component->Resource
+message Underlying {}
+
+// Underlies represents an infrastructure resource supporting a catalog
+// entity (Component, API, etc.)
+// Inverse of Underlying
+// Valid paths: Resource -> Component
+message Underlies {}

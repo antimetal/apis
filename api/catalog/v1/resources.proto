@@ -1,0 +1,92 @@
+// Antimetal API definitions
+// Copyright Antimetal, Inc. All rights reserved.
+//
+// Use of this source code and APIs are governed by a source available license that can be found in
+// the LICENSE file or at:
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt
+
+syntax = "proto3";
+
+package catalog.v1;
+
+// Domain represents a high-level business or technical boundary that organizes systems.
+// Domains help structure large architectures by grouping related systems around business
+// capabilities or technical domains.
+//
+// Examples:
+//   - Business domains: "payments", "user-management", "inventory"
+//   - Technical domains: "data-platform", "ml-infrastructure", "edge-services"
+//
+// A domain typically CONTAINS multiple systems via the Contains relationship.
+message Domain {
+  string description = 1;
+}
+
+// System represents a collection of components that work together to provide a
+// business capability or technical function. Systems are the primary organizational
+// unit for grouping related components.
+//
+// A System:
+//   - CONTAINED_BY a Domain (via ContainedBy relationship)
+//   - CONTAINS Components (via Contains relationship)
+//   - EXPOSES APIs (via Exposes relationship)
+//
+// Examples:
+//   - "fraud-detection-system" (contains: fraud-ml-service, feature-store, kafka-queue)
+//   - "checkout-system" (contains: cart-service, payment-service, order-service)
+//   - "observability-platform" (contains: metrics-collector, log-aggregator, trace-ingestor)
+message System {
+  string description = 1;
+}
+
+// Component represents a software unit that teams build, deploy, and own.
+// Components are the building blocks of systems and include services, datastores,
+// queues, and frontend applications.
+//
+// A Component is distinct from infrastructure Resources (like EC2 instances or
+// Kubernetes Pods) - it represents the logical software artifact that gets deployed
+// TO those resources.
+//
+// Examples:
+//   - TYPE_SERVICE: payment-api, user-service, notification-worker
+//   - TYPE_DATASTORE: postgres-orders, redis-cache, dynamodb-sessions
+//   - TYPE_QUEUE: kafka-events, sqs-notifications
+//   - TYPE_FRONTEND_APP: admin-dashboard, mobile-app-backend-for-frontend
+message Component {
+  // The component subtype.
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    TYPE_SERVICE = 1;
+    TYPE_DATASTORE = 2;
+    TYPE_QUEUE = 3;
+    TYPE_FRONTEND_APP = 4;
+  }
+  Type type = 1;
+  string description = 2;
+}
+
+// API represents an interface contract that defines how components communicate.
+// APIs are boundaries between systems and components.
+//
+// Relationship patterns:
+//   - Systems EXPOSE APIs (via Exposes relationship)
+//   - Components IMPLEMENT APIs (via Implements relationship)
+//   - Components CONSUME APIs (via Consumes relationship)
+//
+// Examples:
+//   - TYPE_REST: payments-api (OpenAPI spec)
+//   - TYPE_GRPC: user-service-grpc (proto definitions)
+//   - TYPE_GRAPHQL: product-catalog-graphql
+//   - TYPE_ASYNC: order-events-topic (Kafka/SQS)
+message API {
+  // The API style.
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    TYPE_REST = 1;
+    TYPE_GRPC = 2;
+    TYPE_GRAPHQL = 3;
+    TYPE_ASYNC = 4;
+  }
+  Type type = 1;
+  string version = 2;
+}
