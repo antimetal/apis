@@ -88,5 +88,21 @@ message API {
     TYPE_ASYNC = 4;
   }
   Type type = 1;
+
+  // API version (e.g., "v1", "2.0", "2025-10-20")
   string version = 2;
+
+  // Base endpoint or service name
+  //   REST: "/api/v1/payments"
+  //   gRPC: "payment.PaymentService"
+  //   GraphQL: "/graphql"
+  //   Async: "orders.events"
+  string endpoint = 3;
+
+  // Key operations/paths
+  //   REST: ["GET /users", "POST /users/{id}"]
+  //   gRPC: ["CreateUser", "GetUser", "ListUsers"]
+  //   GraphQL: ["query getUser", "mutation createUser"]
+  //   Async: ["OrderCreated", "OrderShipped"]
+  repeated string operations = 4;
 }
