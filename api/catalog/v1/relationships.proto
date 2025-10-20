@@ -54,3 +54,13 @@ message Underlying {}
 // Inverse of Underlying
 // Valid paths: Resource -> Component
 message Underlies {}
+
+// SourcedFrom represents source code origin.
+// Components, Systems, and APIs reference the repositories that contain their source code.
+// Valid paths: Component->Repository, System->Repository, API->Repository
+message SourcedFrom {}
+
+// Sources represents a repository providing source code for a catalog entity.
+// Inverse of SourcedFrom
+// Valid paths: Repository->Component, Repository->System, Repository->API
+message Sources {}
